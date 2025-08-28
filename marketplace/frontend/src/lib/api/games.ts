@@ -1,5 +1,15 @@
 import { apiClient, ApiResponse } from './client';
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  commissionRate: number;
+  fieldsConfig?: any;
+  active: boolean;
+  listingsCount?: number;
+}
+
 export interface Game {
   id: string;
   name: string;
@@ -10,10 +20,15 @@ export interface Game {
   createdAt: string;
   categoriesCount?: number;
   listingsCount?: number;
+  categories?: Category[];
 }
 
 export interface GamesResponse {
   games: Game[];
+}
+
+export interface GameWithCategoriesResponse {
+  game: Game;
 }
 
 export const gamesApi = {
@@ -23,7 +38,7 @@ export const gamesApi = {
   },
 
   // Get single game by slug
-  getGameBySlug: async (slug: string): Promise<ApiResponse<Game>> => {
-    return apiClient.getPublic<Game>(`/api/games/${slug}`);
+  getGameBySlug: async (slug: string): Promise<ApiResponse<GameWithCategoriesResponse>> => {
+    return apiClient.getPublic<GameWithCategoriesResponse>(`/api/games/${slug}`);
   },
 };

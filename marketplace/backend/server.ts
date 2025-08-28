@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth';
 import gamesRoutes from './routes/games';
 import categoriesRoutes from './routes/categories';
+import listingsRoutes from './routes/listings';
 
 const prisma = new PrismaClient();
 
@@ -30,6 +31,7 @@ fastify.register(jwt, {
 fastify.register(authRoutes, { prefix: '/api/auth' });
 fastify.register(gamesRoutes, { prefix: '/api/games' });
 fastify.register(categoriesRoutes, { prefix: '/api/categories' });
+fastify.register(listingsRoutes, { prefix: '/api' });
 
 // Basic health check route
 fastify.get('/', async (request, reply) => {
