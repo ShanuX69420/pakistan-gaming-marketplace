@@ -1,40 +1,13 @@
 'use client';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import Link from 'next/link';
 
-export default function DashboardPage() {
-  const { user, isAuthenticated, isVerifying, logout } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isVerifying && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, isVerifying, router]);
-
-  if (isVerifying) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p>Redirecting to login...</p>
-        </div>
-      </div>
-    );
-  }
+function DashboardContent() {
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -48,26 +21,47 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Welcome, {user.username}!</CardTitle>
+            <CardTitle>Welcome, {user?.username}!</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p><strong>Email:</strong> {user.email}</p>
-              <p><strong>Role:</strong> {user.role}</p>
-              <p><strong>Balance:</strong> ${user.balance}</p>
-              <p><strong>Verified:</strong> {user.verified ? 'Yes' : 'No'}</p>
-              <p><strong>Member since:</strong> {new Date(user.createdAt).toLocaleDateString()}</p>
+              <p><strong>Email:</strong> {user?.email}</p>
+              <p><strong>Role:</strong> {user?.role}</p>
+              <p><strong>Balance:</strong> ${user?.balance}</p>
+              <p><strong>Verified:</strong> {user?.verified ? 'Yes' : 'No'}</p>
+              <p><strong>Member since:</strong> {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
             </div>
             
-            <div className="mt-6 p-4 bg-blue-50 rounded-md">
-              <p className="text-blue-800">
-                🎉 <strong>Phase 16 Complete!</strong> This is a placeholder dashboard. 
-                The full dashboard will be implemented in later phases.
+            <div className="mt-6 flex gap-4">
+              <Link href="/profile">
+                <Button variant="outline">View Profile</Button>
+              </Link>
+              {user?.role === 'ADMIN' && (
+                <Link href="/admin">
+                  <Button variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
+                    Admin Panel
+                  </Button>
+                </Link>
+              )}
+            </div>
+            
+            <div className="mt-6 p-4 bg-green-50 rounded-md">
+              <p className="text-green-800">
+                🎉 <strong>Phase 17 Complete!</strong> Protected routes are now implemented with authentication guards. 
+                The dashboard is only accessible to authenticated users.
               </p>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
   );
 }

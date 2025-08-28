@@ -1,3 +1,4 @@
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface ApiResponse<T = any> {
@@ -12,6 +13,7 @@ interface RequestOptions {
   headers?: Record<string, string>;
   body?: any;
   token?: string;
+  skipAuth?: boolean; // Skip automatic token inclusion
 }
 
 class ApiClient {
@@ -21,9 +23,15 @@ class ApiClient {
     this.baseURL = baseURL;
   }
 
+  // Get token from localStorage directly
+  private getToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('auth_token');
+  }
+
   private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    const { method = 'GET', headers = {}, body, token } = options;
+    const { method = 'GET', headers = {}, body, token, skipAuth = false } = options;
 
     const config: RequestInit = {
       method,
@@ -33,11 +41,12 @@ class ApiClient {
       },
     };
 
-    // Add authorization header if token is provided
-    if (token) {
+    // Add authorization header if token is provided or available in storage
+    const authToken = token || (!skipAuth ? this.getToken() : null);
+    if (authToken) {
       config.headers = {
         ...config.headers,
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${authToken}`,
       };
     }
 
@@ -87,6 +96,15 @@ class ApiClient {
   // DELETE request
   async delete<T>(endpoint: string, token?: string): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'DELETE', token });
+  }
+
+  // Methods that explicitly skip authentication
+  async getPublic<T>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { method: 'GET', skipAuth: true });
+  }
+
+  async postPublic<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { method: 'POST', body, skipAuth: true });
   }
 }
 

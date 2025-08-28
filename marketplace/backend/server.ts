@@ -14,7 +14,7 @@ const fastify = Fastify({
 
 // Register CORS
 fastify.register(cors, {
-  origin: ['http://localhost:3000'], // Frontend URL
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'], // Frontend URL
   credentials: true
 });
 

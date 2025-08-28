@@ -33,12 +33,12 @@ export interface RegisterResponse {
 export const authApi = {
   // Login user
   login: async (credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
-    return apiClient.post<LoginResponse>('/api/auth/login', credentials);
+    return apiClient.postPublic<LoginResponse>('/api/auth/login', credentials);
   },
 
   // Register user
   register: async (userData: RegisterRequest): Promise<ApiResponse<RegisterResponse>> => {
-    return apiClient.post<RegisterResponse>('/api/auth/register', userData);
+    return apiClient.postPublic<RegisterResponse>('/api/auth/register', userData);
   },
 
   // Get current user (verify token)

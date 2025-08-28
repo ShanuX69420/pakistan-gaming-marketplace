@@ -51,7 +51,7 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push('/');
     }
   }, [isAuthenticated, router]);
 
@@ -66,7 +66,7 @@ export default function LoginPage() {
     
     login(data, {
       onSuccess: () => {
-        router.push('/dashboard');
+        router.push('/');
       },
       onError: (error) => {
         // Set form-level error for display
@@ -83,7 +83,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p>Redirecting to dashboard...</p>
+          <p>Redirecting to homepage...</p>
         </div>
       </div>
     );
