@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String        @id @default(cuid())
+  username        String        @unique
+  email           String        @unique
+  passwordHash    String
+  role            UserRole      @default(USER)
+  verified        Boolean       @default(false)
+  balance         Decimal       @default(0) @db.Decimal(10, 2)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  listings        Listing[]     @relation("UserListings")
+  buyerOrders     Order[]       @relation("BuyerOrders")
+  sellerOrders    Order[]       @relation("SellerOrders")
+  sentMessages    Message[]     @relation("SentMessages")
+  receivedMessages Message[]    @relation("ReceivedMessages")
+  buyerReviews    Review[]      @relation("BuyerReviews")
+  sellerReviews   Review[]      @relation("SellerReviews")
+  transactions    Transaction[]
+}
+
+model Game {
+  id            String     @id @default(cuid())
+  name          String
+  slug          String     @unique
+  imageUrl      String?
+  platformTypes String[]
+  orderIndex    Int        @default(0)
+  active        Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  categories    Category[]
+  listings      Listing[]
+}
+
+model Category {
+  id             String    @id @default(cuid())
+  gameId         String
+  name           String
+  slug           String
+  commissionRate Decimal   @default(10) @db.Decimal(5, 2)
+  fieldsConfig   Json?
+  active         Boolean   @default(true)
+  game           Game      @relation(fields: [gameId], references: [id])
+  listings       Listing[]
+
+  @@unique([gameId, slug])
+}
+
+model Listing {
+  id           String       @id @default(cuid())
+  sellerId     String
+  gameId       String
+  categoryId   String
+  title        String
+  price        Decimal      @db.Decimal(10, 2)
+  description  String
+  deliveryType DeliveryType @default(MANUAL)
+  stockType    StockType    @default(LIMITED)
+  quantity     Int?
+  images       String[]
+  customFields Json?
+  boostedAt    DateTime?
+  hidden       Boolean      @default(false)
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  category     Category     @relation(fields: [categoryId], references: [id])
+  game         Game         @relation(fields: [gameId], references: [id])
+  seller       User         @relation("UserListings", fields: [sellerId], references: [id])
+  orders       Order[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  listingId       String
+  buyerId         String
+  sellerId        String
+  amount          Decimal     @db.Decimal(10, 2)
+  commission      Decimal     @db.Decimal(10, 2)
+  status          OrderStatus @default(PENDING)
+  paymentMethod   String?
+  escrowReleaseAt DateTime?
+  createdAt       DateTime    @default(now())
+  buyer           User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  listing         Listing     @relation(fields: [listingId], references: [id])
+  seller          User        @relation("SellerOrders", fields: [sellerId], references: [id])
+  messages        Message[]
+  reviews         Review[]
+  transactions    Transaction[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+  SUPPORT
+}
+
+enum DeliveryType {
+  INSTANT
+  MANUAL
+}
+
+enum StockType {
+  LIMITED
+  UNLIMITED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+model Message {
+  id                  String      @id @default(cuid())
+  orderId             String
+  senderId            String
+  receiverId          String
+  content             String      @db.Text
+  type                MessageType @default(TEXT)
+  attachmentUrl       String?
+  isAutomatedDelivery Boolean     @default(false)
+  readAt              DateTime?
+  createdAt           DateTime    @default(now())
+  order               Order       @relation(fields: [orderId], references: [id])
+  sender              User        @relation("SentMessages", fields: [senderId], references: [id])
+  receiver            User        @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  buyerId   String
+  sellerId  String
+  rating    Int
+  comment   String   @db.Text
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
+  buyer     User     @relation("BuyerReviews", fields: [buyerId], references: [id])
+  seller    User     @relation("SellerReviews", fields: [sellerId], references: [id])
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  userId        String
+  orderId       String?
+  type          TransactionType
+  amount        Decimal           @db.Decimal(10, 2)
+  status        TransactionStatus @default(PENDING)
+  paymentMethod String?
+  referenceId   String?
+  createdAt     DateTime          @default(now())
+  user          User              @relation(fields: [userId], references: [id])
+  order         Order?            @relation(fields: [orderId], references: [id])
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  PURCHASE
+  SALE
+  COMMISSION
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
